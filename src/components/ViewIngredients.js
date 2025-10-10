@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, Button, Container, Spinner, Card } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Container,
+  Spinner,
+  Card,
+  Form,
+  Row,
+  Col,
+} from "react-bootstrap";
 import NotificationsBanner from "./NotificationsBanner";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
+  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState("ALL");
   const userId = 6;
 
   // Fetch ingredients
@@ -13,7 +24,10 @@ function ViewIngredients() {
     setLoading(true);
     axios
       .get(`http://localhost:8080/ingredients/${userId}`)
-      .then((res) => setIngredients(res.data))
+      .then((res) => {
+        setIngredients(res.data);
+        setFiltered(res.data);
+      })
       .catch((err) => console.error("Error fetching ingredients:", err))
       .finally(() => setLoading(false));
   };
@@ -21,6 +35,12 @@ function ViewIngredients() {
   useEffect(() => {
     fetchIngredients();
   }, []);
+
+  // Filter by status
+  useEffect(() => {
+    if (filterStatus === "ALL") setFiltered(ingredients);
+    else setFiltered(ingredients.filter((i) => i.status === filterStatus));
+  }, [filterStatus, ingredients]);
 
   // Update status (USED / EXPIRED)
   const updateStatus = (id, status) => {
@@ -68,6 +88,27 @@ function ViewIngredients() {
 
         <NotificationsBanner />
 
+        {/* Filter Controls */}
+        <Row className="align-items-center mb-3">
+          <Col md={6}>
+            <Form.Select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="ALL">Show All</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="USED">Used</option>
+              <option value="EXPIRED">Expired</option>
+            </Form.Select>
+          </Col>
+          <Col md={6} className="text-md-end text-center mt-2 mt-md-0">
+            <Button variant="success" href="/add">
+              + Add New Ingredient
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Ingredient Table */}
         <div className="table-responsive mt-3">
           <Table striped bordered hover className="align-middle text-center">
             <thead className="table-dark">
@@ -81,8 +122,8 @@ function ViewIngredients() {
               </tr>
             </thead>
             <tbody>
-              {ingredients.length > 0 ? (
-                ingredients.map((item) => (
+              {filtered.length > 0 ? (
+                filtered.map((item) => (
                   <tr
                     key={item.id}
                     className={
@@ -99,7 +140,9 @@ function ViewIngredients() {
                     <td>{item.category}</td>
                     <td>{item.purchaseDate}</td>
                     <td>{item.expiryDate}</td>
-                    <td><strong>{item.status}</strong></td>
+                    <td>
+                      <strong>{item.status}</strong>
+                    </td>
                     <td>
                       <div className="d-flex justify-content-center gap-2 flex-wrap">
                         <Button
@@ -132,18 +175,12 @@ function ViewIngredients() {
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center py-3">
-                    No ingredients found.
+                    No ingredients found for selected filter.
                   </td>
                 </tr>
               )}
             </tbody>
           </Table>
-        </div>
-
-        <div className="text-center mt-3">
-          <Button variant="success" href="/add">
-            + Add New
-          </Button>
         </div>
       </Card>
     </Container>
