@@ -19,14 +19,17 @@ function ViewIngredients() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const userId = 6;
 
-  // Fetch ingredients
+  // ✅ Fetch all ingredients and sort by expiry date (soonest first)
   const fetchIngredients = () => {
     setLoading(true);
     axios
       .get(`http://localhost:8080/ingredients/${userId}`)
       .then((res) => {
-        setIngredients(res.data);
-        setFiltered(res.data);
+        const sorted = res.data.sort(
+          (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
+        );
+        setIngredients(sorted);
+        setFiltered(sorted);
       })
       .catch((err) => console.error("Error fetching ingredients:", err))
       .finally(() => setLoading(false));
@@ -36,19 +39,19 @@ function ViewIngredients() {
     fetchIngredients();
   }, []);
 
-  // Filter by status
+  // ✅ Filter by status
   useEffect(() => {
     if (filterStatus === "ALL") setFiltered(ingredients);
     else setFiltered(ingredients.filter((i) => i.status === filterStatus));
   }, [filterStatus, ingredients]);
 
-  // Update status (USED / EXPIRED)
+  // ✅ Update status (USED / EXPIRED)
   const updateStatus = (id, status) => {
     axios
       .put(`http://localhost:8080/ingredients/${id}/status?status=${status}`)
       .then(() => {
         alert(`✅ Ingredient marked as ${status}`);
-        fetchIngredients();
+        fetchIngredients(); // automatically re-sorts
       })
       .catch((err) => {
         console.error("Error updating status:", err);
@@ -56,20 +59,32 @@ function ViewIngredients() {
       });
   };
 
-  // Delete ingredient
+  // ✅ Delete ingredient with confirmation
   const deleteIngredient = (id, name) => {
     if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
       axios
         .delete(`http://localhost:8080/ingredients/${id}`)
         .then(() => {
           alert(`🗑️ "${name}" deleted successfully`);
-          fetchIngredients();
+          fetchIngredients(); // automatically re-sorts
         })
         .catch((err) => {
           console.error("Error deleting ingredient:", err);
           alert("❌ Failed to delete ingredient.");
         });
     }
+  };
+
+  // ✅ Determine row color dynamically
+  const getRowClass = (item) => {
+    const today = new Date();
+    const expiry = new Date(item.expiryDate);
+    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+
+    if (item.status === "EXPIRED") return "table-danger";
+    if (item.status === "USED") return "table-secondary";
+    if (diffDays <= 2 && diffDays >= 0) return "table-warning"; // expiring soon
+    return "";
   };
 
   if (loading) {
@@ -86,9 +101,10 @@ function ViewIngredients() {
       <Card className="shadow-sm p-4">
         <h3 className="text-center mb-4">Your Ingredients</h3>
 
+        {/* ✅ Expiry alerts */}
         <NotificationsBanner />
 
-        {/* Filter Controls */}
+        {/* ✅ Filter Controls */}
         <Row className="align-items-center mb-3">
           <Col md={6}>
             <Form.Select
@@ -108,7 +124,7 @@ function ViewIngredients() {
           </Col>
         </Row>
 
-        {/* Ingredient Table */}
+        {/* ✅ Table */}
         <div className="table-responsive mt-3">
           <Table striped bordered hover className="align-middle text-center">
             <thead className="table-dark">
@@ -116,7 +132,7 @@ function ViewIngredients() {
                 <th>Name</th>
                 <th>Category</th>
                 <th>Purchase Date</th>
-                <th>Expiry Date</th>
+                <th>Expiry Date ⏳</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -124,18 +140,7 @@ function ViewIngredients() {
             <tbody>
               {filtered.length > 0 ? (
                 filtered.map((item) => (
-                  <tr
-                    key={item.id}
-                    className={
-                      item.status === "EXPIRED"
-                        ? "table-danger"
-                        : item.status === "USED"
-                        ? "table-secondary"
-                        : new Date(item.expiryDate) <= new Date()
-                        ? "table-warning"
-                        : ""
-                    }
-                  >
+                  <tr key={item.id} className={getRowClass(item)}>
                     <td>{item.name}</td>
                     <td>{item.category}</td>
                     <td>{item.purchaseDate}</td>
