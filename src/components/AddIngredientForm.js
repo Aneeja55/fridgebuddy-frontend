@@ -1,53 +1,48 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Form, Button, Alert, Card } from "react-bootstrap";
+import { Form, Button, Container, Card } from "react-bootstrap";
 
 function AddIngredientForm() {
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [message, setMessage] = useState("");
+  const [ingredient, setIngredient] = useState({
+    name: "",
+    category: "",
+    purchaseDate: "",
+    expiryDate: "",
+    status: "AVAILABLE",
+    user: { id: 6 },
+  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault(); // ✅ prevents accidental GET request
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setIngredient({ ...ingredient, [name]: value });
+  };
 
-    try {
-      const response = await axios.post("http://localhost:8080/ingredients", {
-        name,
-        category,
-        purchaseDate,
-        expiryDate,
-        status: "AVAILABLE", // backend expects this
-        user: { id: 6 } // ✅ existing user ID from your MySQL "users" table
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    axios
+      .post("http://localhost:8080/ingredients", ingredient)
+      .then(() => {
+        alert("Ingredient added successfully!");
+        window.location.href = "/";
+      })
+      .catch((err) => {
+        console.error("Error adding ingredient:", err);
+        alert("Failed to add ingredient.");
       });
-
-      setMessage("✅ Ingredient added successfully!");
-      console.log("Response:", response.data);
-
-      // Reset form
-      setName("");
-      setCategory("");
-      setPurchaseDate("");
-      setExpiryDate("");
-
-    } catch (error) {
-      console.error("Error:", error);
-      setMessage("❌ Error adding ingredient.");
-    }
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
-      <Card style={{ width: "30rem", padding: "2rem" }}>
-        <h3 className="text-center mb-4">Add Ingredient</h3>
+    <Container className="mt-5">
+      <Card className="p-4 shadow-sm">
+        <h3 className="text-center mb-4">Add New Ingredient</h3>
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
               type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              name="name"
+              value={ingredient.name}
+              onChange={handleChange}
               required
             />
           </Form.Group>
@@ -56,8 +51,9 @@ function AddIngredientForm() {
             <Form.Label>Category</Form.Label>
             <Form.Control
               type="text"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              name="category"
+              value={ingredient.category}
+              onChange={handleChange}
               required
             />
           </Form.Group>
@@ -66,8 +62,9 @@ function AddIngredientForm() {
             <Form.Label>Purchase Date</Form.Label>
             <Form.Control
               type="date"
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
+              name="purchaseDate"
+              value={ingredient.purchaseDate}
+              onChange={handleChange}
               required
             />
           </Form.Group>
@@ -76,27 +73,21 @@ function AddIngredientForm() {
             <Form.Label>Expiry Date</Form.Label>
             <Form.Control
               type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
+              name="expiryDate"
+              value={ingredient.expiryDate}
+              onChange={handleChange}
               required
             />
           </Form.Group>
 
-          <Button variant="success" type="submit" className="w-100">
-            Add Ingredient
-          </Button>
+          <div className="text-center">
+            <Button variant="success" type="submit">
+              Add Ingredient
+            </Button>
+          </div>
         </Form>
-
-        {message && (
-          <Alert
-            variant={message.includes("Error") ? "danger" : "success"}
-            className="mt-3 text-center"
-          >
-            {message}
-          </Alert>
-        )}
       </Card>
-    </div>
+    </Container>
   );
 }
 

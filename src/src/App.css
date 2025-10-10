@@ -36,25 +36,3 @@
     transform: rotate(360deg);
   }
 }
-
-.table {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.table th, .table td {
-  vertical-align: middle !important;
-}
-
-.table-warning {
-  background-color: #fff3cd !important;
-}
-
-.table-danger {
-  background-color: #f8d7da !important;
-}
-
-.table-secondary {
-  background-color: #e2e3e5 !important;
-}
-
