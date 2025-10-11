@@ -5,9 +5,9 @@ import { Toast, ToastContainer, Spinner } from "react-bootstrap";
 function NotificationsBanner() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = 6; // static for now
+  const userId = 6;
 
-  // ✅ Fetch unseen notifications
+  // ✅ Fetch notifications from backend
   const fetchNotifications = () => {
     axios
       .get(`http://localhost:8080/notifications/${userId}`)
@@ -21,24 +21,15 @@ function NotificationsBanner() {
       });
   };
 
-  // ✅ Dismiss / mark as seen
+  // ✅ Temporarily dismiss notification (for this session only)
   const dismissNotification = (id) => {
-    axios
-      .put(`http://localhost:8080/notifications/${id}/seen`)
-      .then(() => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-      })
-      .catch((err) => {
-        console.error("Error marking notification as seen:", err);
-        // still hide locally
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-      });
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  // ✅ Load + auto-refresh every 10s
+  // ✅ Fetch on mount and every 10 seconds
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
+    const interval = setInterval(fetchNotifications, 3600000);
     return () => clearInterval(interval);
   }, []);
 
@@ -51,16 +42,16 @@ function NotificationsBanner() {
     );
   }
 
-  // ✅ Render Toasts
+  // ✅ Render Toast notifications
   return (
     <ToastContainer position="top-end" className="p-3">
       {notifications.map((n) => (
         <Toast
           key={n.id}
           bg="warning"
-          onClose={() => dismissNotification(n.id)} // ✅ working dismiss
+          onClose={() => dismissNotification(n.id)} // hide locally
           show={true}
-          autohide={false} // disable autohide for manual dismissal
+          autohide={false}
           className="mb-3 shadow-sm"
         >
           <Toast.Header closeButton>
