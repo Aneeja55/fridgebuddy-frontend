@@ -79,3 +79,13 @@ body {
 footer {
   font-size: 0.9rem;
 }
+
+.toast {
+  border-radius: 12px !important;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}

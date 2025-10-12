@@ -11,6 +11,7 @@ import {
   Col,
 } from "react-bootstrap";
 import NotificationsBanner from "./NotificationsBanner";
+import { useToast } from "./ToastContext";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
@@ -46,17 +47,19 @@ function ViewIngredients() {
     else setFiltered(ingredients.filter((i) => i.status === filterStatus));
   }, [filterStatus, ingredients]);
 
+  const { showToast } = useToast();
+
   // ✅ Update status (USED / EXPIRED)
   const updateStatus = (id, status) => {
     axios
       .put(`http://localhost:8080/ingredients/${id}/status?status=${status}`)
       .then(() => {
-        alert(`✅ Ingredient marked as ${status}`);
+        showToast(`Ingredient marked as ${status}`, "info");
         fetchIngredients(); // automatically re-sorts
       })
       .catch((err) => {
         console.error("Error updating status:", err);
-        alert("❌ Failed to update status.");
+        showToast("Failed to update status.", "danger");
       });
   };
 
@@ -66,12 +69,12 @@ function ViewIngredients() {
       axios
         .delete(`http://localhost:8080/ingredients/${id}`)
         .then(() => {
-          alert(`🗑️ "${name}" deleted successfully`);
+          showToast("Ingredient deleted successfully", "success");
           fetchIngredients(); // automatically re-sorts
         })
         .catch((err) => {
           console.error("Error deleting ingredient:", err);
-          alert("❌ Failed to delete ingredient.");
+          showToast("Failed to delete ingredient", "danger");
         });
     }
   };

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button, Container, Card } from "react-bootstrap";
+import { useToast } from "./ToastContext";
 
 function AddIngredientForm() {
   const [ingredient, setIngredient] = useState({
@@ -16,18 +17,18 @@ function AddIngredientForm() {
     const { name, value } = e.target;
     setIngredient({ ...ingredient, [name]: value });
   };
-
+  const { showToast } = useToast();
   const handleSubmit = (e) => {
     e.preventDefault();
     axios
       .post("http://localhost:8080/ingredients", ingredient)
       .then(() => {
-        alert("Ingredient added successfully!");
+        showToast("Ingredient added successfully!", "success");
         window.location.href = "/";
       })
       .catch((err) => {
         console.error("Error adding ingredient:", err);
-        alert("Failed to add ingredient.");
+        showToast("Failed to add ingredient.", "danger");
       });
   };
 
