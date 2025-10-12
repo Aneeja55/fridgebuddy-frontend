@@ -18,6 +18,7 @@ function ViewIngredients() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("ALL");
   const userId = 6;
+  
 
   // ✅ Fetch all ingredients and sort by expiry date (soonest first)
   const fetchIngredients = () => {
@@ -74,6 +75,17 @@ function ViewIngredients() {
         });
     }
   };
+
+// Add this helper function near the top of ViewIngredients.js
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 
   // ✅ Determine row color dynamically
   const getRowClass = (item) => {
@@ -143,8 +155,8 @@ function ViewIngredients() {
                   <tr key={item.id} className={getRowClass(item)}>
                     <td>{item.name}</td>
                     <td>{item.category}</td>
-                    <td>{item.purchaseDate}</td>
-                    <td>{item.expiryDate}</td>
+                    <td>{formatDate(item.purchaseDate)}</td>
+                    <td>{formatDate(item.expiryDate)}</td>
                     <td>
                       <strong>{item.status}</strong>
                     </td>
@@ -179,8 +191,14 @@ function ViewIngredients() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center py-3">
-                    No ingredients found for selected filter.
+                  <td colSpan="6" className="text-center py-4">
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/7656/7656139.png"
+                      alt="Empty fridge"
+                      style={{ width: "80px", opacity: 0.7 }}
+                    />
+                    <p className="mt-3 mb-0 fw-semibold">Your fridge is empty!</p>
+                    <p className="text-muted">Add your first ingredient to get started.</p>
                   </td>
                 </tr>
               )}
