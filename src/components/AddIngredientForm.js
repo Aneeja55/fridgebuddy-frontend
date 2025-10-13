@@ -1,47 +1,52 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Form, Button, Container, Card } from "react-bootstrap";
-import { useToast } from "./ToastContext";
+import { Form, Button, Container, Card, Spinner } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 function AddIngredientForm() {
   const [ingredient, setIngredient] = useState({
+    user: { id: 6 }, // ✅ Static user ID (for now)
     name: "",
     category: "",
     purchaseDate: "",
     expiryDate: "",
-    status: "AVAILABLE",
-    user: { id: 6 },
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setIngredient({ ...ingredient, [name]: value });
+    setIngredient({ ...ingredient, [e.target.name]: e.target.value });
   };
-  const { showToast } = useToast();
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLoading(true);
+
     axios
       .post("http://localhost:8080/ingredients", ingredient)
       .then(() => {
-        showToast("Ingredient added successfully!", "success");
-        window.location.href = "/";
+        toast.success("✅ Ingredient added successfully!");
+        setTimeout(() => (window.location.href = "/"), 1000);
       })
       .catch((err) => {
         console.error("Error adding ingredient:", err);
-        showToast("Failed to add ingredient.", "danger");
-      });
+        toast.error("❌ Failed to add ingredient. Please try again.");
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
     <Container className="mt-5">
-      <Card className="p-4 shadow-sm">
+      <Card className="shadow-sm p-4">
         <h3 className="text-center mb-4">Add New Ingredient</h3>
+
         <Form onSubmit={handleSubmit}>
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
               type="text"
               name="name"
+              placeholder="Enter ingredient name"
               value={ingredient.name}
               onChange={handleChange}
               required
@@ -53,6 +58,7 @@ function AddIngredientForm() {
             <Form.Control
               type="text"
               name="category"
+              placeholder="e.g. Dairy, Snack, Meat"
               value={ingredient.category}
               onChange={handleChange}
               required
@@ -82,8 +88,14 @@ function AddIngredientForm() {
           </Form.Group>
 
           <div className="text-center">
-            <Button variant="success" type="submit">
-              Add Ingredient
+            <Button type="submit" variant="success" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" /> Adding...
+                </>
+              ) : (
+                "+ Add Ingredient"
+              )}
             </Button>
           </div>
         </Form>

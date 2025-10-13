@@ -1,27 +1,39 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, Button, Container, Spinner, Card } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Container,
+  Spinner,
+  Card,
+  Modal,
+} from "react-bootstrap";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import NotificationsBanner from "./NotificationsBanner";
-import { useToast } from "./ToastContext";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = 6;
-  const { showToast } = useToast();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedIngredient, setSelectedIngredient] = useState(null);
+  const userId = 6; // static user
 
+  // ✅ Fetch and sort ingredients by expiry date
   const fetchIngredients = () => {
     setLoading(true);
     axios
       .get(`http://localhost:8080/ingredients/${userId}`)
       .then((res) => {
-        // Sort by expiry date (soonest first)
         const sorted = res.data.sort(
           (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
         );
         setIngredients(sorted);
       })
-      .catch((err) => console.error("Error fetching ingredients:", err))
+      .catch((err) => {
+        console.error("Error fetching ingredients:", err);
+        toast.error("❌ Failed to fetch ingredients", { position: "top-right" });
+      })
       .finally(() => setLoading(false));
   };
 
@@ -29,36 +41,51 @@ function ViewIngredients() {
     fetchIngredients();
   }, []);
 
-  // ✅ Update status (USED / EXPIRED)
+  // ✅ Update ingredient status (USED / EXPIRED)
   const updateStatus = (id, status) => {
     axios
       .put(`http://localhost:8080/ingredients/${id}/status?status=${status}`)
       .then(() => {
-        showToast(`Ingredient marked as ${status}`, "info");
+        toast.success(`✅ Ingredient marked as ${status}`, {
+          position: "top-right",
+        });
         fetchIngredients();
       })
       .catch((err) => {
         console.error("Error updating status:", err);
-        showToast("Failed to update status.", "danger");
+        toast.error("❌ Failed to update status", { position: "top-right" });
       });
   };
 
-  // ✅ Delete ingredient with confirmation
-  const deleteIngredient = (id, name) => {
-    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
-      axios
-        .delete(`http://localhost:8080/ingredients/${id}`)
-        .then(() => {
-          showToast(`"${name}" deleted successfully.`, "success");
-          fetchIngredients();
-        })
-        .catch((err) => {
-          console.error("Error deleting ingredient:", err);
-          showToast("Failed to delete ingredient.", "danger");
-        });
-    }
+  // ✅ Open confirmation modal before deletion
+  const confirmDelete = (ingredient) => {
+    setSelectedIngredient(ingredient);
+    setShowModal(true);
   };
 
+  // ✅ Delete ingredient
+  const deleteIngredient = () => {
+    if (!selectedIngredient) return;
+
+    axios
+      .delete(`http://localhost:8080/ingredients/${selectedIngredient.id}`)
+      .then(() => {
+        toast.success("🗑 Ingredient deleted successfully!", {
+          position: "top-right",
+        });
+        setShowModal(false);
+        setSelectedIngredient(null);
+        fetchIngredients();
+      })
+      .catch((err) => {
+        console.error("Error deleting ingredient:", err);
+        toast.error("❌ Failed to delete ingredient!", {
+          position: "top-right",
+        });
+      });
+  };
+
+  // ✅ Loading spinner
   if (loading) {
     return (
       <Container className="mt-5 text-center">
@@ -68,13 +95,16 @@ function ViewIngredients() {
     );
   }
 
+  // ✅ Main UI
   return (
     <Container className="mt-5">
       <Card className="shadow-sm p-4">
         <h3 className="text-center mb-4">Your Ingredients</h3>
+
+        {/* Notifications banner */}
         <NotificationsBanner />
 
-        <Table bordered hover className="align-middle text-center">
+        <Table bordered hover responsive className="align-middle text-center">
           <thead className="table-dark">
             <tr>
               <th>Name</th>
@@ -128,9 +158,9 @@ function ViewIngredients() {
                       <Button
                         variant="outline-dark"
                         size="sm"
-                        onClick={() => deleteIngredient(item.id, item.name)}
+                        onClick={() => confirmDelete(item)}
                       >
-                        Delete
+                        🗑 Delete
                       </Button>
                     </div>
                   </td>
@@ -152,6 +182,26 @@ function ViewIngredients() {
           </Button>
         </div>
       </Card>
+
+      {/* ✅ Deletion confirmation modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete{" "}
+          <strong>{selectedIngredient?.name}</strong>? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={deleteIngredient}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

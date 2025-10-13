@@ -58,3 +58,46 @@
   background-color: #e2e3e5 !important;
 }
 
+body {
+  background-color: #f7f9fc;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Card Style */
+.card {
+  border: none;
+  border-radius: 16px;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+}
+
+/* Table styling */
+.table th {
+  background-color: #20232a !important;
+  color: white !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #e8f5ff !important;
+  transition: 0.2s ease;
+}
+
+/* Buttons */
+.btn-success {
+  background-color: #2ecc71;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #27ae60;
+}
+
+/* Footer */
+footer {
+  font-size: 0.9rem;
+}
+
