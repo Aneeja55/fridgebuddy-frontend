@@ -19,7 +19,7 @@ function ViewIngredients() {
   const [search, setSearch] = useState("");
   const userId = 6;
 
-  // ✅ Fetch ingredients
+  // ✅ Fetch ingredients from backend
   const fetchIngredients = () => {
     setLoading(true);
     axios
@@ -78,6 +78,12 @@ function ViewIngredients() {
     return matchesFilter && matchesSearch;
   });
 
+  // ✅ Clear filters handler
+  const clearFilters = () => {
+    setFilter("ALL");
+    setSearch("");
+  };
+
   if (loading) {
     return (
       <Container className="mt-5 text-center">
@@ -93,7 +99,7 @@ function ViewIngredients() {
         <h3 className="text-center mb-4">Your Ingredients</h3>
         <NotificationsBanner />
 
-        {/* ✅ Filter + Search Bar */}
+        {/* ✅ Filter + Search + Clear */}
         <Row className="align-items-center mb-4">
           <Col md={3} sm={12} className="mb-2">
             <Form.Select
@@ -107,7 +113,7 @@ function ViewIngredients() {
             </Form.Select>
           </Col>
 
-          <Col md={6} sm={12} className="mb-2">
+          <Col md={5} sm={12} className="mb-2">
             <Form.Control
               type="text"
               placeholder="Search by name or category..."
@@ -116,9 +122,16 @@ function ViewIngredients() {
             />
           </Col>
 
-          <Col md={3} sm={12} className="text-md-end text-center">
+          <Col
+            md={4}
+            sm={12}
+            className="d-flex justify-content-md-end justify-content-center gap-2"
+          >
+            <Button variant="outline-secondary" onClick={clearFilters}>
+              Clear Filters
+            </Button>
             <Button variant="success" href="/add">
-              + Add New Ingredient
+              + Add New
             </Button>
           </Col>
         </Row>
