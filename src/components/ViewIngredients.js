@@ -1,25 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Table,
-  Button,
-  Container,
-  Spinner,
-  Card,
-  Modal,
-} from "react-bootstrap";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { Table, Button, Container, Spinner, Card, Form } from "react-bootstrap";
 import NotificationsBanner from "./NotificationsBanner";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedIngredient, setSelectedIngredient] = useState(null);
-  const userId = 6; // static user
+  const [filter, setFilter] = useState("ALL"); // ✅ NEW
+  const userId = 6;
 
-  // ✅ Fetch and sort ingredients by expiry date
+  // ✅ Fetch ingredients
   const fetchIngredients = () => {
     setLoading(true);
     axios
@@ -30,10 +20,7 @@ function ViewIngredients() {
         );
         setIngredients(sorted);
       })
-      .catch((err) => {
-        console.error("Error fetching ingredients:", err);
-        toast.error("❌ Failed to fetch ingredients", { position: "top-right" });
-      })
+      .catch((err) => console.error("Error fetching ingredients:", err))
       .finally(() => setLoading(false));
   };
 
@@ -41,51 +28,45 @@ function ViewIngredients() {
     fetchIngredients();
   }, []);
 
-  // ✅ Update ingredient status (USED / EXPIRED)
+  // ✅ Update status
   const updateStatus = (id, status) => {
     axios
       .put(`http://localhost:8080/ingredients/${id}/status?status=${status}`)
       .then(() => {
-        toast.success(`✅ Ingredient marked as ${status}`, {
-          position: "top-right",
-        });
+        alert(`Ingredient marked as ${status}`);
         fetchIngredients();
       })
       .catch((err) => {
         console.error("Error updating status:", err);
-        toast.error("❌ Failed to update status", { position: "top-right" });
+        alert("Failed to update status.");
       });
-  };
-
-  // ✅ Open confirmation modal before deletion
-  const confirmDelete = (ingredient) => {
-    setSelectedIngredient(ingredient);
-    setShowModal(true);
   };
 
   // ✅ Delete ingredient
-  const deleteIngredient = () => {
-    if (!selectedIngredient) return;
-
-    axios
-      .delete(`http://localhost:8080/ingredients/${selectedIngredient.id}`)
-      .then(() => {
-        toast.success("🗑 Ingredient deleted successfully!", {
-          position: "top-right",
+  const deleteIngredient = (id, name) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+      axios
+        .delete(`http://localhost:8080/ingredients/${id}`)
+        .then(() => {
+          alert(`${name} deleted successfully.`);
+          fetchIngredients();
+        })
+        .catch((err) => {
+          console.error("Error deleting ingredient:", err);
+          alert("Failed to delete ingredient.");
         });
-        setShowModal(false);
-        setSelectedIngredient(null);
-        fetchIngredients();
-      })
-      .catch((err) => {
-        console.error("Error deleting ingredient:", err);
-        toast.error("❌ Failed to delete ingredient!", {
-          position: "top-right",
-        });
-      });
+    }
   };
 
-  // ✅ Loading spinner
+  // ✅ Apply filter
+  const filteredIngredients = ingredients.filter((item) => {
+    if (filter === "ALL") return true;
+    if (filter === "EXPIRED") return item.status === "EXPIRED";
+    if (filter === "USED") return item.status === "USED";
+    if (filter === "AVAILABLE") return item.status === "AVAILABLE";
+    return true;
+  });
+
   if (loading) {
     return (
       <Container className="mt-5 text-center">
@@ -95,16 +76,31 @@ function ViewIngredients() {
     );
   }
 
-  // ✅ Main UI
   return (
     <Container className="mt-5">
       <Card className="shadow-sm p-4">
         <h3 className="text-center mb-4">Your Ingredients</h3>
-
-        {/* Notifications banner */}
         <NotificationsBanner />
 
-        <Table bordered hover responsive className="align-middle text-center">
+        {/* ✅ Filter Dropdown */}
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <Form.Select
+            style={{ width: "200px" }}
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="ALL">All</option>
+            <option value="AVAILABLE">Available</option>
+            <option value="EXPIRED">Expired</option>
+            <option value="USED">Used</option>
+          </Form.Select>
+          <Button variant="success" href="/add">
+            + Add New Ingredient
+          </Button>
+        </div>
+
+        {/* ✅ Ingredient Table */}
+        <Table bordered hover className="align-middle text-center">
           <thead className="table-dark">
             <tr>
               <th>Name</th>
@@ -116,8 +112,8 @@ function ViewIngredients() {
             </tr>
           </thead>
           <tbody>
-            {ingredients.length > 0 ? (
-              ingredients.map((item) => (
+            {filteredIngredients.length > 0 ? (
+              filteredIngredients.map((item) => (
                 <tr
                   key={item.id}
                   className={
@@ -158,9 +154,9 @@ function ViewIngredients() {
                       <Button
                         variant="outline-dark"
                         size="sm"
-                        onClick={() => confirmDelete(item)}
+                        onClick={() => deleteIngredient(item.id, item.name)}
                       >
-                        🗑 Delete
+                        Delete
                       </Button>
                     </div>
                   </td>
@@ -169,39 +165,13 @@ function ViewIngredients() {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center py-3">
-                  No ingredients found.
+                  No ingredients found for "{filter.toLowerCase()}" filter.
                 </td>
               </tr>
             )}
           </tbody>
         </Table>
-
-        <div className="text-center mt-3">
-          <Button variant="success" href="/add">
-            + Add New
-          </Button>
-        </div>
       </Card>
-
-      {/* ✅ Deletion confirmation modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Confirm Deletion</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          Are you sure you want to delete{" "}
-          <strong>{selectedIngredient?.name}</strong>? This action cannot be
-          undone.
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={deleteIngredient}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 }
