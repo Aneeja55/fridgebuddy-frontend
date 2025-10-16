@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Table, Button, Container, Spinner, Card, Form } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Container,
+  Spinner,
+  Card,
+  Form,
+  Row,
+  Col,
+} from "react-bootstrap";
 import NotificationsBanner from "./NotificationsBanner";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("ALL"); // ✅ NEW
+  const [filter, setFilter] = useState("ALL");
+  const [search, setSearch] = useState("");
   const userId = 6;
 
   // ✅ Fetch ingredients
@@ -58,13 +68,14 @@ function ViewIngredients() {
     }
   };
 
-  // ✅ Apply filter
+  // ✅ Apply filter & search
   const filteredIngredients = ingredients.filter((item) => {
-    if (filter === "ALL") return true;
-    if (filter === "EXPIRED") return item.status === "EXPIRED";
-    if (filter === "USED") return item.status === "USED";
-    if (filter === "AVAILABLE") return item.status === "AVAILABLE";
-    return true;
+    const matchesFilter =
+      filter === "ALL" || item.status === filter.toUpperCase();
+    const matchesSearch =
+      item.name.toLowerCase().includes(search.toLowerCase()) ||
+      item.category.toLowerCase().includes(search.toLowerCase());
+    return matchesFilter && matchesSearch;
   });
 
   if (loading) {
@@ -82,22 +93,35 @@ function ViewIngredients() {
         <h3 className="text-center mb-4">Your Ingredients</h3>
         <NotificationsBanner />
 
-        {/* ✅ Filter Dropdown */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <Form.Select
-            style={{ width: "200px" }}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="ALL">All</option>
-            <option value="AVAILABLE">Available</option>
-            <option value="EXPIRED">Expired</option>
-            <option value="USED">Used</option>
-          </Form.Select>
-          <Button variant="success" href="/add">
-            + Add New Ingredient
-          </Button>
-        </div>
+        {/* ✅ Filter + Search Bar */}
+        <Row className="align-items-center mb-4">
+          <Col md={3} sm={12} className="mb-2">
+            <Form.Select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="ALL">All</option>
+              <option value="AVAILABLE">Available</option>
+              <option value="EXPIRED">Expired</option>
+              <option value="USED">Used</option>
+            </Form.Select>
+          </Col>
+
+          <Col md={6} sm={12} className="mb-2">
+            <Form.Control
+              type="text"
+              placeholder="Search by name or category..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </Col>
+
+          <Col md={3} sm={12} className="text-md-end text-center">
+            <Button variant="success" href="/add">
+              + Add New Ingredient
+            </Button>
+          </Col>
+        </Row>
 
         {/* ✅ Ingredient Table */}
         <Table bordered hover className="align-middle text-center">
@@ -165,7 +189,7 @@ function ViewIngredients() {
             ) : (
               <tr>
                 <td colSpan="6" className="text-center py-3">
-                  No ingredients found for "{filter.toLowerCase()}" filter.
+                  No ingredients found matching your criteria.
                 </td>
               </tr>
             )}
