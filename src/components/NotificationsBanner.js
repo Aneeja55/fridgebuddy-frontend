@@ -7,7 +7,8 @@ function NotificationsBanner() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAllGood, setShowAllGood] = useState(true);
-  const userId = 6;
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+const userId = storedUser?.id;
 
   // ✅ Fetch notifications from backend
   const fetchNotifications = () => {

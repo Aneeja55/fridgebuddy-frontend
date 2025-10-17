@@ -1,26 +1,36 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import AddIngredientForm from "./components/AddIngredientForm";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Login from "./auth/Login";
+import Register from "./auth/Register";
 import ViewIngredients from "./components/ViewIngredients";
-import AppNavbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css"; // ✅ We'll add some theme styles here
+import AddIngredientForm from "./components/AddIngredientForm";
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) setUser(JSON.parse(storedUser));
+  }, []);
+
   return (
-    <div className="app-layout d-flex flex-column min-vh-100 bg-light">
-      <Router>
-        <AppNavbar />
-        <main className="flex-grow-1">
-          <Routes>
+    <Router>
+      <Routes>
+        {!user ? (
+          <>
+            <Route path="/login" element={<Login onLogin={setUser} />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </>
+        ) : (
+          <>
             <Route path="/" element={<ViewIngredients />} />
             <Route path="/add" element={<AddIngredientForm />} />
-          </Routes>
-        </main>
-        <Footer />
-      </Router>
-    </div>
+            <Route path="*" element={<Navigate to="/" />} />
+          </>
+        )}
+      </Routes>
+    </Router>
   );
 }
 

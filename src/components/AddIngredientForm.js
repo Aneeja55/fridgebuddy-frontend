@@ -4,8 +4,10 @@ import { Form, Button, Container, Card, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 
 function AddIngredientForm() {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+const userId = storedUser?.id;
   const [ingredient, setIngredient] = useState({
-    user: { id: 6 }, // ✅ Static user ID (for now)
+    user: { id: userId }, // ✅ Static user ID (for now)
     name: "",
     category: "",
     purchaseDate: "",
