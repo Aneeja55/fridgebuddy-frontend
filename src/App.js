@@ -1,58 +1,52 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
-import Login from "./auth/Login";
-import Register from "./auth/Register";
+import Navbar from "./components/Navbar";
 import IngredientList from "./components/IngredientList";
 import AddIngredientForm from "./components/AddIngredientForm";
-import Navbar from "./components/Navbar";
-import NotificationsBanner from "./components/NotificationsBanner";
+import Login from "./auth/Login";
+import Register from "./auth/Register";
+
+// ✅ Route Guard to protect user pages
+const PrivateRoute = ({ children }) => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  return user ? children : <Navigate to="/login" />;
+};
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  // ✅ Load user from localStorage (persistent login)
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-  }, []);
-
-  // ✅ Handle logout
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-  };
-
   return (
     <Router>
-      {/* Navbar visible only for logged-in users */}
-      {user && <Navbar onLogout={handleLogout} />}
+      <Navbar />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-      <div className="container mt-4">
-        {/* Notifications visible only for logged-in users */}
-        {user && <NotificationsBanner />}
+        {/* Protected Routes */}
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <IngredientList />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/add"
+          element={
+            <PrivateRoute>
+              <AddIngredientForm />
+            </PrivateRoute>
+          }
+        />
 
-        <Routes>
-          {/* Public Routes */}
-          {!user && <Route path="/login" element={<Login />} />}
-          {!user && <Route path="/register" element={<Register />} />}
-
-          {/* Protected Routes */}
-          {user && (
-            <>
-              <Route path="/" element={<IngredientList user={user} />} />
-              <Route path="/add" element={<AddIngredientForm user={user} />} />
-            </>
-          )}
-
-          {/* Default Redirect */}
-          <Route
-            path="*"
-            element={<Navigate to={user ? "/" : "/login"} replace />}
-          />
-        </Routes>
-      </div>
+        {/* Catch-all Redirect */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </Router>
   );
 }

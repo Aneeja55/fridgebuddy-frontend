@@ -1,67 +1,58 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { Form, Button, Container, Card } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const handleRegister = (e) => {
     e.preventDefault();
-    setError("");
 
-    try {
-      const response = await axios.post("http://localhost:8080/api/auth/register", {
-        username,
-        password,
-      });
-      alert(response.data);
-      navigate("/login");
-    } catch (err) {
-      console.error(err);
-      setError("Registration failed. Try another username.");
-    }
+    axios
+      .post("http://localhost:8080/auth/register", { username, password })
+      .then((res) => {
+        localStorage.setItem("user", JSON.stringify(res.data));
+        toast.success("Account created successfully!");
+        window.location.href = "/";
+      })
+      .catch(() => toast.error("Username already exists"));
   };
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "400px" }}>
-      <h2 className="text-center mb-4">Register</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
+    <Container className="mt-5">
+      <Card className="p-4 shadow-sm">
+        <h3 className="text-center mb-3">Register</h3>
+        <Form onSubmit={handleRegister}>
+          <Form.Group className="mb-3">
+            <Form.Label>Username</Form.Label>
+            <Form.Control
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-      <form onSubmit={handleRegister}>
-        <div className="mb-3">
-          <label className="form-label">Username</label>
-          <input
-            type="text"
-            className="form-control"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
+          <Form.Group className="mb-3">
+            <Form.Label>Password</Form.Label>
+            <Form.Control
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </Form.Group>
 
-        <div className="mb-3">
-          <label className="form-label">Password</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button type="submit" className="btn btn-primary w-100">
-          Register
-        </button>
-      </form>
-
-      <p className="text-center mt-3">
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
-    </div>
+          <div className="text-center">
+            <Button variant="success" type="submit">
+              Register
+            </Button>
+          </div>
+        </Form>
+      </Card>
+    </Container>
   );
 }
 

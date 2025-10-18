@@ -11,13 +11,15 @@ import {
   Col,
 } from "react-bootstrap";
 import NotificationsBanner from "./NotificationsBanner";
+import { getCurrentUser } from "../utils/auth";
 
 function ViewIngredients() {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [search, setSearch] = useState("");
-  const userId = 6;
+  const user = getCurrentUser();
+  const userId = user?.id;
 
   // ✅ Fetch ingredients from backend
   const fetchIngredients = () => {

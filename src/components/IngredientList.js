@@ -1,76 +1,74 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Button, Table } from "react-bootstrap";
+import { toast } from "react-toastify";
 
-const IngredientList = () => {
+function IngredientList() {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const userId = storedUser?.id;
+
   const [ingredients, setIngredients] = useState([]);
-  const userId = 1; // Replace with actual logged-in user ID if applicable
 
   useEffect(() => {
-    fetchIngredients();
-  }, []);
-
-  const fetchIngredients = async () => {
-    try {
-      const res = await axios.get(`http://localhost:8080/ingredients/${userId}`);
-      setIngredients(res.data);
-    } catch (error) {
-      console.error("Error fetching ingredients:", error);
+    if (!userId) {
+      toast.error("User not found. Please log in again.");
+      return;
     }
-  };
 
-  const deleteIngredient = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this ingredient?")) return;
-    try {
-      await axios.delete(`http://localhost:8080/ingredients/${id}`);
-      alert("Ingredient deleted successfully!");
-      // Refresh the list after deletion
-      setIngredients(ingredients.filter((i) => i.id !== id));
-    } catch (error) {
-      console.error("Error deleting ingredient:", error);
-      alert("Failed to delete ingredient.");
+    axios
+      .get(`http://localhost:8080/ingredients/${userId}`)
+      .then((res) => setIngredients(res.data))
+      .catch((err) => {
+        console.error("Error fetching ingredients:", err);
+        toast.error("Failed to fetch ingredients.");
+      });
+  }, [userId]);
+
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this ingredient?")) {
+      axios
+        .delete(`http://localhost:8080/ingredients/${id}`)
+        .then(() => {
+          toast.success("Ingredient deleted!");
+          setIngredients(ingredients.filter((i) => i.id !== id));
+        })
+        .catch(() => toast.error("Failed to delete ingredient."));
     }
   };
 
   return (
     <div className="container mt-4">
-      <h2>Ingredient List</h2>
-      {ingredients.length === 0 ? (
-        <p>No ingredients found.</p>
-      ) : (
-        <table className="table table-bordered">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Purchase Date</th>
-              <th>Expiry Date</th>
-              <th>Status</th>
-              <th>Actions</th>
+      <h3>Your Ingredients</h3>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Purchase Date</th>
+            <th>Expiry Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ingredients.map((i) => (
+            <tr key={i.id}>
+              <td>{i.name}</td>
+              <td>{i.category}</td>
+              <td>{i.purchaseDate}</td>
+              <td>{i.expiryDate}</td>
+              <td>{i.status}</td>
+              <td>
+                <Button variant="danger" onClick={() => handleDelete(i.id)}>
+                  Delete
+                </Button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {ingredients.map((ingredient) => (
-              <tr key={ingredient.id}>
-                <td>{ingredient.name}</td>
-                <td>{ingredient.category}</td>
-                <td>{ingredient.purchaseDate}</td>
-                <td>{ingredient.expiryDate}</td>
-                <td>{ingredient.status}</td>
-                <td>
-                  <button
-                    onClick={() => deleteIngredient(ingredient.id)}
-                    className="btn btn-danger btn-sm"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          ))}
+        </tbody>
+      </Table>
     </div>
   );
-};
+}
 
 export default IngredientList;

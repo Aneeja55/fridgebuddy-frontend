@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button, Container, Card, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
+import { getCurrentUser } from "../utils/auth";
 
 function AddIngredientForm() {
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-const userId = storedUser?.id;
+  const user = getCurrentUser();
+  const userId = user?.id;
   const [ingredient, setIngredient] = useState({
     user: { id: userId }, // ✅ Static user ID (for now)
     name: "",
@@ -25,7 +26,7 @@ const userId = storedUser?.id;
     setLoading(true);
 
     axios
-      .post("http://localhost:8080/ingredients", ingredient)
+      .post(`http://localhost:8080/ingredients/${userId}`, ingredient)
       .then(() => {
         toast.success("✅ Ingredient added successfully!");
         setTimeout(() => (window.location.href = "/"), 1000);
