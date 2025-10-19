@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Button, Table } from "react-bootstrap";
+import { Button, Table, Badge, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -13,8 +13,9 @@ function IngredientList() {
 
   const [ingredients, setIngredients] = useState([]);
   const [highlightId, setHighlightId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch ingredients for logged-in user
+  // ✅ Fetch ingredients
   useEffect(() => {
     if (!userId) {
       toast.error("User not found. Please log in again.");
@@ -23,11 +24,16 @@ function IngredientList() {
 
     axios
       .get(`http://localhost:8080/api/ingredients/${userId}`)
-      .then((res) => setIngredients(res.data))
+      .then((res) => {
+        const data = res.data;
+        setIngredients(data);
+        handleAutoExpire(data);
+      })
       .catch((err) => {
         console.error("Error fetching ingredients:", err);
         toast.error("Failed to fetch ingredients.");
-      });
+      })
+      .finally(() => setLoading(false));
   }, [userId]);
 
   // ✅ Highlight the newly added ingredient
@@ -39,6 +45,26 @@ function IngredientList() {
       setTimeout(() => setHighlightId(null), 3000);
     }
   }, []);
+
+  // ✅ Auto-mark expired ingredients
+  const handleAutoExpire = (ingredients) => {
+    const today = dayjs();
+    ingredients.forEach((item) => {
+      const expiry = dayjs(item.expiryDate);
+      if (expiry.isBefore(today) && item.status !== "EXPIRED") {
+        axios
+          .put(
+            `http://localhost:8080/api/ingredients/${item.id}/status?status=EXPIRED`
+          )
+          .then(() => {
+            console.log(`Auto-marked ${item.name} as expired.`);
+          })
+          .catch((err) =>
+            console.error("Failed to auto-mark expired item:", err)
+          );
+      }
+    });
+  };
 
   // ✅ Delete handler
   const handleDelete = (id) => {
@@ -52,6 +78,45 @@ function IngredientList() {
         .catch(() => toast.error("Failed to delete ingredient."));
     }
   };
+
+  // ✅ Update status manually (mark used)
+  const handleStatusUpdate = (id, status) => {
+    axios
+      .put(`http://localhost:8080/api/ingredients/${id}/status?status=${status}`)
+      .then(() => {
+        toast.info(`Ingredient marked as ${status}.`);
+        setIngredients((prev) =>
+          prev.map((i) =>
+            i.id === id ? { ...i, status: status.toUpperCase() } : i
+          )
+        );
+      })
+      .catch((err) => {
+        console.error("Error updating status:", err);
+        toast.error("Failed to update status.");
+      });
+  };
+
+  // ✅ Render colored badge
+  const renderStatusBadge = (status) => {
+    switch (status?.toUpperCase()) {
+      case "EXPIRED":
+        return <Badge bg="danger">Expired</Badge>;
+      case "USED":
+        return <Badge bg="secondary">Used</Badge>;
+      default:
+        return <Badge bg="success">Available</Badge>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+        <p>Loading your fridge...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
@@ -74,16 +139,14 @@ function IngredientList() {
               const today = dayjs();
               const daysUntilExpiry = expiry.diff(today, "day");
 
-              // 🎨 Color logic
+              // 🎨 Row color logic
               let rowClass = "";
               if (daysUntilExpiry < 0) {
                 rowClass = "table-danger"; // expired
               } else if (daysUntilExpiry <= 1) {
                 rowClass = "table-danger"; // expires today/tomorrow
               } else if (daysUntilExpiry <= 7) {
-                rowClass = "table-warning"; // expiring soon (within a week)
-              } else {
-                rowClass = ""; // safe
+                rowClass = "table-warning"; // expiring soon
               }
 
               return (
@@ -97,17 +160,26 @@ function IngredientList() {
                   <td>{i.category}</td>
                   <td>{dayjs(i.purchaseDate).format("MMM D, YYYY")}</td>
                   <td>{dayjs(i.expiryDate).format("MMM D, YYYY")}</td>
+                  <td>{renderStatusBadge(i.status)}</td>
                   <td>
-                    <strong>{i.status || "AVAILABLE"}</strong>
-                  </td>
-                  <td>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => handleDelete(i.id)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="d-flex justify-content-center gap-2 flex-wrap">
+                      {i.status !== "USED" && i.status !== "EXPIRED" && (
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleStatusUpdate(i.id, "USED")}
+                        >
+                          Mark Used
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline-dark"
+                        size="sm"
+                        onClick={() => handleDelete(i.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               );
