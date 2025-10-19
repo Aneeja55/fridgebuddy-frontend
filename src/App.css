@@ -138,3 +138,82 @@ footer {
     font-size: 1.05rem;
   }
 }
+
+/*  Smooth fade-in animation for new/updated rows */
+.fade-in-row {
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Optional: subtle row glow for expiring soon */
+.table-warning td {
+  background-color: #fff3cd !important;
+  animation: pulseYellow 2s infinite alternate;
+}
+
+@keyframes pulseYellow {
+  from {
+    background-color: #fff8d1;
+  }
+  to {
+    background-color: #ffe8a1;
+  }
+}
+
+.table-danger td {
+  background-color: #f8d7da !important;
+  animation: pulseRed 2s infinite alternate;
+}
+
+@keyframes pulseRed {
+  from {
+    background-color: #f8d7da;
+  }
+  to {
+    background-color: #f1aeb5;
+  }
+}
+
+/* ✨ Highlight glow for newly added ingredients */
+.row-glow {
+  animation: glowPulse 1s ease-in-out infinite alternate;
+  background-color: #d1e7dd !important; /* soft green */
+  transition: all 0.3s ease;
+}
+
+@keyframes glowPulse {
+  from {
+    box-shadow: 0 0 10px rgba(72, 187, 120, 0.6);
+    transform: scale(1.01);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(72, 187, 120, 0.9);
+    transform: scale(1.02);
+  }
+}
+
+.fade-in-row {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

@@ -31,8 +31,9 @@ function AddIngredientForm() {
 
     axios
       .post(`http://localhost:8080/api/ingredients`, ingredient)
-      .then(() => {
+      .then((res) => {
         toast.success("✅ Ingredient added successfully!");
+        localStorage.setItem("newIngredientId", res.data.id);
         setTimeout(() => (window.location.href = "/"), 1000);
         
       })
