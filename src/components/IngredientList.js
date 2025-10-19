@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Button, Table, Badge, Spinner } from "react-bootstrap";
+import { Button, Table, Badge, Spinner, Card } from "react-bootstrap";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -15,7 +15,7 @@ function IngredientList() {
   const [highlightId, setHighlightId] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch ingredients
+  // ✅ Fetch and sort ingredients by expiry
   useEffect(() => {
     if (!userId) {
       toast.error("User not found. Please log in again.");
@@ -25,9 +25,11 @@ function IngredientList() {
     axios
       .get(`http://localhost:8080/api/ingredients/${userId}`)
       .then((res) => {
-        const data = res.data;
-        setIngredients(data);
-        handleAutoExpire(data);
+        const sorted = res.data.sort(
+          (a, b) => new Date(a.expiryDate) - new Date(b.expiryDate)
+        );
+        setIngredients(sorted);
+        handleAutoExpire(sorted);
       })
       .catch((err) => {
         console.error("Error fetching ingredients:", err);
@@ -46,7 +48,7 @@ function IngredientList() {
     }
   }, []);
 
-  // ✅ Auto-mark expired ingredients
+  // ✅ Auto-mark expired items in backend
   const handleAutoExpire = (ingredients) => {
     const today = dayjs();
     ingredients.forEach((item) => {
@@ -56,11 +58,11 @@ function IngredientList() {
           .put(
             `http://localhost:8080/api/ingredients/${item.id}/status?status=EXPIRED`
           )
-          .then(() => {
-            console.log(`Auto-marked ${item.name} as expired.`);
-          })
+          .then(() =>
+            console.log(`Auto-marked ${item.name} as expired.`)
+          )
           .catch((err) =>
-            console.error("Failed to auto-mark expired item:", err)
+            console.error("Failed to auto-mark expired:", err)
           );
       }
     });
@@ -73,13 +75,13 @@ function IngredientList() {
         .delete(`http://localhost:8080/api/ingredients/${id}`)
         .then(() => {
           toast.success("Ingredient deleted!");
-          setIngredients(ingredients.filter((i) => i.id !== id));
+          setIngredients((prev) => prev.filter((i) => i.id !== id));
         })
         .catch(() => toast.error("Failed to delete ingredient."));
     }
   };
 
-  // ✅ Update status manually (mark used)
+  // ✅ Mark as used
   const handleStatusUpdate = (id, status) => {
     axios
       .put(`http://localhost:8080/api/ingredients/${id}/status?status=${status}`)
@@ -97,7 +99,6 @@ function IngredientList() {
       });
   };
 
-  // ✅ Render colored badge
   const renderStatusBadge = (status) => {
     switch (status?.toUpperCase()) {
       case "EXPIRED":
@@ -109,6 +110,18 @@ function IngredientList() {
     }
   };
 
+  // 🎨 Row coloring logic
+  const getRowClass = (expiryDate) => {
+    const expiry = dayjs(expiryDate);
+    const today = dayjs();
+    const daysUntilExpiry = expiry.diff(today, "day");
+
+    if (daysUntilExpiry < 0) return "table-danger";
+    if (daysUntilExpiry <= 1) return "table-danger";
+    if (daysUntilExpiry <= 7) return "table-warning";
+    return "";
+  };
+
   if (loading) {
     return (
       <div className="text-center mt-5">
@@ -118,75 +131,127 @@ function IngredientList() {
     );
   }
 
+  // 🧊 Separate expired and active ingredients
+  const activeItems = ingredients.filter((i) => i.status !== "EXPIRED");
+  const expiredItems = ingredients.filter((i) => i.status === "EXPIRED");
+
   return (
     <div className="container mt-4">
-      <h3 className="mb-3">Your Ingredients</h3>
-      <div className="table-responsive">
-        <Table striped bordered hover className="align-middle text-center">
-          <thead className="table-dark">
-            <tr>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Purchase Date</th>
-              <th>Expiry Date</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ingredients.map((i) => {
-              const expiry = dayjs(i.expiryDate);
-              const today = dayjs();
-              const daysUntilExpiry = expiry.diff(today, "day");
+      <h3 className="mb-4">Your Ingredients</h3>
 
-              // 🎨 Row color logic
-              let rowClass = "";
-              if (daysUntilExpiry < 0) {
-                rowClass = "table-danger"; // expired
-              } else if (daysUntilExpiry <= 1) {
-                rowClass = "table-danger"; // expires today/tomorrow
-              } else if (daysUntilExpiry <= 7) {
-                rowClass = "table-warning"; // expiring soon
-              }
+      {/* 🌿 Active / Upcoming Ingredients */}
+      <Card className="shadow-sm mb-5">
+        <Card.Header as="h5" className="bg-success text-white">
+          🥗 Active & Upcoming Ingredients
+        </Card.Header>
+        <Card.Body className="p-0">
+          {activeItems.length > 0 ? (
+            <div className="table-responsive">
+              <Table bordered hover className="align-middle text-center m-0">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Purchase Date</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeItems.map((i) => (
+                    <tr
+                      key={i.id}
+                      className={`${getRowClass(i.expiryDate)} ${
+                        i.id === highlightId ? "row-glow" : ""
+                      } fade-in-row`}
+                    >
+                      <td>{i.name}</td>
+                      <td>{i.category}</td>
+                      <td>{dayjs(i.purchaseDate).format("MMM D, YYYY")}</td>
+                      <td>{dayjs(i.expiryDate).format("MMM D, YYYY")}</td>
+                      <td>{renderStatusBadge(i.status)}</td>
+                      <td>
+                        <div className="d-flex justify-content-center gap-2 flex-wrap">
+                          {i.status !== "USED" && (
+                            <Button
+                              variant="outline-primary"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(i.id, "USED")}
+                            >
+                              Mark Used
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline-dark"
+                            size="sm"
+                            onClick={() => handleDelete(i.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-center py-4 text-muted mb-0">
+              No active ingredients. Add some fresh items! 🧺
+            </p>
+          )}
+        </Card.Body>
+      </Card>
 
-              return (
-                <tr
-                  key={i.id}
-                  className={`${rowClass} ${
-                    i.id === highlightId ? "row-glow" : ""
-                  } fade-in-row`}
-                >
-                  <td>{i.name}</td>
-                  <td>{i.category}</td>
-                  <td>{dayjs(i.purchaseDate).format("MMM D, YYYY")}</td>
-                  <td>{dayjs(i.expiryDate).format("MMM D, YYYY")}</td>
-                  <td>{renderStatusBadge(i.status)}</td>
-                  <td>
-                    <div className="d-flex justify-content-center gap-2 flex-wrap">
-                      {i.status !== "USED" && i.status !== "EXPIRED" && (
+      {/* 🧊 Expired Ingredients Section */}
+      <Card className="shadow-sm">
+        <Card.Header as="h5" className="bg-danger text-white">
+          ⚠️ Expired Ingredients
+        </Card.Header>
+        <Card.Body className="p-0">
+          {expiredItems.length > 0 ? (
+            <div className="table-responsive">
+              <Table bordered hover className="align-middle text-center m-0">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Purchase Date</th>
+                    <th>Expiry Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expiredItems.map((i) => (
+                    <tr key={i.id} className="table-danger fade-in-row">
+                      <td>{i.name}</td>
+                      <td>{i.category}</td>
+                      <td>{dayjs(i.purchaseDate).format("MMM D, YYYY")}</td>
+                      <td>{dayjs(i.expiryDate).format("MMM D, YYYY")}</td>
+                      <td>{renderStatusBadge(i.status)}</td>
+                      <td>
                         <Button
-                          variant="outline-primary"
+                          variant="outline-dark"
                           size="sm"
-                          onClick={() => handleStatusUpdate(i.id, "USED")}
+                          onClick={() => handleDelete(i.id)}
                         >
-                          Mark Used
+                          Delete
                         </Button>
-                      )}
-                      <Button
-                        variant="outline-dark"
-                        size="sm"
-                        onClick={() => handleDelete(i.id)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </Table>
-      </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-center py-4 text-muted mb-0">
+              No expired ingredients. Great job! 🌱
+            </p>
+          )}
+        </Card.Body>
+      </Card>
     </div>
   );
 }

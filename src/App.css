@@ -191,6 +191,11 @@ footer {
   transition: all 0.3s ease;
 }
 
+@keyframes highlightFlash {
+  0% { background-color: #c8e6c9; }
+  100% { background-color: transparent; }
+}
+
 @keyframes glowPulse {
   from {
     box-shadow: 0 0 10px rgba(72, 187, 120, 0.6);
