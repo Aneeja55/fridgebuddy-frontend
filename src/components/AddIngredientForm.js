@@ -44,7 +44,7 @@ function AddIngredientForm() {
       <Card className="shadow-sm p-4">
         <h3 className="text-center mb-4">Add New Ingredient</h3>
 
-        <Form onSubmit={handleSubmit}>
+        <Form onSubmit={handleSubmit} className="p-2 p-md-3">
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
@@ -92,7 +92,7 @@ function AddIngredientForm() {
           </Form.Group>
 
           <div className="text-center">
-            <Button type="submit" variant="success" disabled={loading}>
+            <Button  type="submit"  variant="success"  className="w-100 w-md-auto"  disabled={loading}>
               {loading ? (
                 <>
                   <Spinner animation="border" size="sm" /> Adding...

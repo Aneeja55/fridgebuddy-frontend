@@ -37,37 +37,38 @@ function IngredientList() {
   };
 
   return (
-    <div className="container mt-4">
-      <h3>Your Ingredients</h3>
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Purchase Date</th>
-            <th>Expiry Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ingredients.map((i) => (
-            <tr key={i.id}>
-              <td>{i.name}</td>
-              <td>{i.category}</td>
-              <td>{i.purchaseDate}</td>
-              <td>{i.expiryDate}</td>
-              <td>{i.status}</td>
-              <td>
-                <Button variant="danger" onClick={() => handleDelete(i.id)}>
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+    <div className="table-responsive">
+  <Table striped bordered hover className="align-middle text-center">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Purchase Date</th>
+        <th>Expiry Date</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {ingredients.map((i) => (
+        <tr key={i.id}>
+          <td>{i.name}</td>
+          <td>{i.category}</td>
+          <td>{i.purchaseDate}</td>
+          <td>{i.expiryDate}</td>
+          <td>{i.status}</td>
+          <td>
+            <div className="d-flex flex-wrap justify-content-center gap-2">
+              <Button variant="danger" onClick={() => handleDelete(i.id)}>
+                Delete
+              </Button>
+            </div>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </Table>
+</div>
   );
 }
 
