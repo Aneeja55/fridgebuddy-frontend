@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Button, Table } from "react-bootstrap";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 
 function IngredientList() {
   const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -54,8 +55,8 @@ function IngredientList() {
         <tr key={i.id}>
           <td>{i.name}</td>
           <td>{i.category}</td>
-          <td>{i.purchaseDate}</td>
-          <td>{i.expiryDate}</td>
+          <td>{i.purchaseDate ? dayjs(i.purchaseDate).format("MMM D, YYYY") : "-"}</td>
+          <td>{i.expiryDate ? dayjs(i.expiryDate).format("MMM D, YYYY") : "-"}</td>
           <td>{i.status}</td>
           <td>
             <div className="d-flex flex-wrap justify-content-center gap-2">

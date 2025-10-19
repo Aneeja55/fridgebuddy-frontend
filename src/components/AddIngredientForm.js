@@ -3,17 +3,21 @@ import axios from "axios";
 import { Form, Button, Container, Card, Spinner } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { getCurrentUser } from "../utils/auth";
+import dayjs from "dayjs";
+
 
 function AddIngredientForm() {
   const user = getCurrentUser();
+  const today = dayjs().format("YYYY-MM-DD");
   const userId = user?.id;
   const [ingredient, setIngredient] = useState({
     user: { id: userId }, // ✅ Static user ID (for now)
     name: "",
     category: "",
-    purchaseDate: "",
+    purchaseDate: today,
     expiryDate: "",
   });
+  
 
   const [loading, setLoading] = useState(false);
 
