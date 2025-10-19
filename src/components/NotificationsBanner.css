@@ -1,59 +1,51 @@
-/* ---------- Smooth animations ---------- */
-.toast-animated {
-  animation: slideUp 0.6s ease, fadeIn 0.6s ease;
+.custom-toast-container {
+  position: fixed !important;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.6rem;
+  z-index: 1055;
 }
 
-@keyframes slideUp {
+.toast-animated {
+  animation: slideIn 0.4s ease, fadeIn 0.4s ease;
+}
+
+@keyframes slideIn {
   from {
-    transform: translateY(20px);
+    transform: translateX(40px);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
   }
 }
 
 @keyframes fadeIn {
   from {
-    opacity: 0;
-    transform: scale(0.96);
+    opacity: 0.5;
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
-/* ---------- Container styling ---------- */
-.custom-toast-container {
-  top: 1rem !important;
-  right: 1rem !important;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.6rem;
-}
-
-/* ---------- Toast appearance ---------- */
 .toast {
-  border-radius: 1rem !important;
-  padding: 0;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-  transition: all 0.3s ease-in-out;
-  transform-origin: top right;
+  border-radius: 0.9rem !important;
+  min-width: 260px;
+  max-width: 340px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
 }
 
 .toast:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .toast-header {
-  font-weight: 600;
-  border-bottom: none;
-}
-
-/* Subtle hover glow */
-.toast:hover {
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  background-color: #fff3cd;
+  border-bottom: 1px solid #ffeeba;
 }
