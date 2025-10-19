@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
 import IngredientList from "./components/IngredientList";
 import AddIngredientForm from "./components/AddIngredientForm";

@@ -16,7 +16,7 @@ function IngredientList() {
     }
 
     axios
-      .get(`http://localhost:8080/ingredients/${userId}`)
+      .get(`http://localhost:8080/api/ingredients/${userId}`)
       .then((res) => setIngredients(res.data))
       .catch((err) => {
         console.error("Error fetching ingredients:", err);
@@ -27,7 +27,7 @@ function IngredientList() {
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this ingredient?")) {
       axios
-        .delete(`http://localhost:8080/ingredients/${id}`)
+        .delete(`http://localhost:8080/api/ingredients/${id}`)
         .then(() => {
           toast.success("Ingredient deleted!");
           setIngredients(ingredients.filter((i) => i.id !== id));
