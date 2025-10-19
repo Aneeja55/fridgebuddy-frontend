@@ -30,6 +30,7 @@ function AddIngredientForm() {
       .then(() => {
         toast.success("✅ Ingredient added successfully!");
         setTimeout(() => (window.location.href = "/"), 1000);
+        
       })
       .catch((err) => {
         console.error("Error adding ingredient:", err);
