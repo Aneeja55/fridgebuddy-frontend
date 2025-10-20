@@ -1,26 +1,48 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# =========================
+# React + Node.js .gitignore
+# =========================
 
-# dependencies
-/node_modules
-.cache/
-dist/
-build/
-/.pnp
+# Dependencies
+node_modules/
+.pnp/
 .pnp.js
 
-# testing
-/coverage
+# Build outputs
+build/
+dist/
+.cache/
+.next/
+out/
+coverage/
 
-# production
-/build
+# Environment files
+.env
+.env.*
+!.env.example  # Keep example envs
 
-# misc
+# OS / Editor files
 .DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+Thumbs.db
+.vscode/
+.idea/
+*.swp
 
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+
+# Misc
+*.local
+*.lock
+*.bak
+*.tmp
+
+# React testing
+coverage/
+
+# Optional: lock files (only if multiple managers are used)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
