@@ -8,7 +8,7 @@ import {
   Card,
   Collapse,
 } from "react-bootstrap";
-import { toast } from "react-toastify";
+import { useToast } from "./ToastContext";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import NotificationsBanner from "./NotificationsBanner";  
@@ -16,6 +16,7 @@ import NotificationsBanner from "./NotificationsBanner";
 dayjs.extend(relativeTime);
 
 function IngredientList() {
+  const { showToast } = useToast();
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userId = storedUser?.id;
 
@@ -27,7 +28,7 @@ function IngredientList() {
   // ✅ Fetch ingredients and notifications
   useEffect(() => {
     if (!userId) {
-      toast.error("User not found. Please log in again.");
+      showToast("User not found. Please log in again.");
       return;
     }
 
@@ -48,26 +49,15 @@ function IngredientList() {
       })
       .catch((err) => {
         console.error("Error fetching ingredients:", err);
-        toast.error("Failed to fetch ingredients.");
+        showToast("Failed to fetch ingredients.");
       })
       .finally(() => setLoading(false));
   };
 
   // ✅ Fetch notifications for items expiring soon
-  const fetchNotifications = () => {
-    axios
-      .get(`http://localhost:8080/notifications/${userId}`)
-      .then((res) => {
-        if (res.data.length > 0) {
-          res.data.forEach((n) =>
-            toast.warning(`⚠️ ${n.message}`, { autoClose: 5000 })
-          );
-        }
-      })
-      .catch((err) =>
-        console.error("Error fetching notifications:", err)
-      );
-  };
+  // ✅ Fetch notifications handled entirely by NotificationsBanner now
+const fetchNotifications = () => {};
+
 
   // ✅ Highlight new ingredient temporarily
   useEffect(() => {
@@ -103,10 +93,10 @@ function IngredientList() {
       axios
         .delete(`http://localhost:8080/api/ingredients/${id}`)
         .then(() => {
-          toast.success("Ingredient deleted!");
+          showToast("Ingredient deleted!","success");
           setIngredients((prev) => prev.filter((i) => i.id !== id));
         })
-        .catch(() => toast.error("Failed to delete ingredient."));
+        .catch(() => showToast("Failed to delete ingredient."));
     }
   };
 
@@ -115,7 +105,7 @@ function IngredientList() {
     axios
       .put(`http://localhost:8080/api/ingredients/${id}/status?status=${status}`)
       .then(() => {
-        toast.info(`Ingredient marked as ${status}.`);
+        showToast(`Ingredient marked as ${status}.`,"info");
         setIngredients((prev) =>
           prev.map((i) =>
             i.id === id ? { ...i, status: status.toUpperCase() } : i
@@ -124,7 +114,7 @@ function IngredientList() {
       })
       .catch((err) => {
         console.error("Error updating status:", err);
-        toast.error("Failed to update status.");
+        showToast("Failed to update status.");
       });
   };
 
