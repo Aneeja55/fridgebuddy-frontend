@@ -33,7 +33,7 @@ function NotificationsBanner() {
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // refresh every minute
+    const interval = setInterval(fetchNotifications, 360000); // refresh every minute
     return () => clearInterval(interval);
   }, [userId, showToast]);
 
