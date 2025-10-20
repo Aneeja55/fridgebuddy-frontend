@@ -11,7 +11,6 @@ import {
 import { useToast } from "./ToastContext";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import NotificationsBanner from "./NotificationsBanner";  
 
 dayjs.extend(relativeTime);
 
@@ -157,7 +156,6 @@ const fetchNotifications = () => {};
   return (
     <div className="container mt-4">
       <h3 className="mb-4">Your Ingredients</h3>
-        <NotificationsBanner/>
       {/* 🌿 Active Ingredients */}
       <Card className="shadow-sm mb-5">
         <Card.Header as="h5" className="bg-success text-white">

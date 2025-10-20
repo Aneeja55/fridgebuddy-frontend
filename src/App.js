@@ -7,6 +7,7 @@ import IngredientList from "./components/IngredientList";
 import AddIngredientForm from "./components/AddIngredientForm";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
+import NotificationsBanner from "./components/NotificationsBanner"; 
 
 // Route guard
 const PrivateRoute = ({ children }) => {
@@ -19,6 +20,7 @@ function App() {
     <Router>
       <Navbar />
       <main className="app-main">
+        <NotificationsBanner />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
