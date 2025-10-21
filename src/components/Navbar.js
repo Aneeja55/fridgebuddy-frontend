@@ -127,7 +127,10 @@ function AppNavbar() {
                           <Button
                             variant="outline-danger"
                             size="sm"
-                            onClick={() => handleDismiss(i)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // 🧩 prevents dropdown from closing
+                              handleDismiss(i);
+                            }}
                           >
                             ×
                           </Button>
