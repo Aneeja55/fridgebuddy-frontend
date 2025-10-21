@@ -17,37 +17,43 @@ function NotificationsBanner() {
         const res = await axios.get(`http://localhost:8080/notifications/${userId}`);
         const now = dayjs();
 
+        // Group by ingredientId to keep only one message per ingredient
+        const latestByIngredient = {};
         res.data.forEach((n) => {
-          // ✅ Handle both backend formats
-          const ingredient = n.ingredient || {};
-          const name = ingredient.name || n.message?.match(/(\b[A-Z][a-zA-Z0-9_ ]+)/)?.[0] || "An ingredient";
-          const expiryDate = ingredient.expiryDate
-            ? dayjs(ingredient.expiryDate)
-            : dayjs(n.expiryDate || now.add(2, "day")); // fallback
+          const existing = latestByIngredient[n.ingredientId];
+          if (!existing || n.id > existing.id) {
+            latestByIngredient[n.ingredientId] = n;
+          }
+        });
 
-          const daysLeft = expiryDate.diff(now, "day");
+        Object.values(latestByIngredient).forEach((n) => {
+          const msg = n.message || "";
+          const match = msg.match(/([A-Za-z0-9_ ]+)\s(is|has)/);
+          const name = match ? match[1].trim() : "An ingredient";
+
+          const dateMatch = msg.match(/(\d{4}-\d{2}-\d{2})/);
+          const expiryDate = dateMatch ? dayjs(dateMatch[1]) : null;
 
           let message = "";
           let variant = "warning";
 
-          // 🧊 Determine notification message
-          if (expiryDate.isBefore(now, "day")) {
-            message = `<strong>Expiry Alert</strong><br /><small>Just now</small><br />❌ ${name} has expired on <strong>${expiryDate.format(
-              "MMMM D, YYYY"
-            )}</strong>.`;
+          // If it says "has expired"
+          if (msg.toLowerCase().includes("has expired")) {
+            message = `<strong>Expiry Alert</strong><br /><small>Just now</small><br />❌ ${name} has expired on <strong>${expiryDate?.format("MMMM D, YYYY")}</strong>.`;
             variant = "danger";
-          } else if (daysLeft <= 3) {
-            message = `<strong>Expiry Alert</strong><br /><small>Just now</small><br />⚠️ ${name} is expiring on <strong>${expiryDate.format(
-              "MMMM D, YYYY"
-            )}</strong>.`;
+          }
+          // If it says "is expiring"
+          else if (msg.toLowerCase().includes("is expiring")) {
+            message = `<strong>Expiry Alert</strong><br /><small>Just now</small><br />⚠️ ${name} is expiring on <strong>${expiryDate?.format("MMMM D, YYYY")}</strong>.`;
+            variant = "warning";
           } else {
-            return; // Skip items that are not urgent
+            return;
           }
 
-          // ✅ Avoid repeating the same message
+          // Avoid duplicate notifications
           if (!seenMessages.current.has(message)) {
             seenMessages.current.add(message);
-            showToast(message, variant,true);
+            showToast(message, variant, true);
           }
         });
       } catch (err) {
@@ -56,7 +62,7 @@ function NotificationsBanner() {
     };
 
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // every minute
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [userId, showToast]);
 
