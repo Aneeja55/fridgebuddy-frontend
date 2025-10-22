@@ -64,7 +64,7 @@ function AppNavbar() {
           className="fw-bold text-light"
           style={{ fontSize: "1.4rem", letterSpacing: "0.5px" }}
         >
-          🧊 Fridge Buddy
+          EAT-ME-FIRST
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
